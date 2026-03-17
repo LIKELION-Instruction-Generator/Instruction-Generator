@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --font-body:
+    "Pretendard Variable",
+    "Pretendard",
+    "Noto Sans KR",
+    "Apple SD Gothic Neo",
+    "Malgun Gothic",
+    "Segoe UI",
+    sans-serif;
+  --color-canvas: #f7f2ea;
+  --color-shell: rgba(255, 250, 244, 0.9);
+  --color-surface: #fffdf9;
+  --color-ink: #22160f;
+  --color-muted: #7a6657;
+  --color-border: #ecdac6;
+  --color-accent: #ff6b00;
+  --color-accent-strong: #db5200;
+  --color-accent-soft: #ffe1cc;
+  --color-success: #15876a;
+  --color-danger: #d84c4c;
+  --color-warning: #f59a23;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0)),
+    var(--color-canvas);
+  color: var(--color-ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(255, 107, 0, 0.18);
+}
+
+@layer utilities {
+  .text-kr {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+}

@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: stt-quiz-postgres
+    environment:
+      POSTGRES_DB: quizsvc
+      POSTGRES_USER: quizsvc
+      POSTGRES_PASSWORD: quizsvc
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quizsvc -d quizsvc"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

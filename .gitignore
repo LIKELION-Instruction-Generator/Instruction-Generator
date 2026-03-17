@@ -1,52 +1,38 @@
-# --- Python & Cache ---
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
-.ipynb_checkpoints/
-*.so
-
-# --- AI/ML Specific (Data & Models) ---
-data/
-dataset/
-models/
-weights/
-*.h5
-*.pth
-*.pt
-*.onnx
-*.pb
-*.ckpt
-
-# --- Environments & Dependencies ---
-.venv/
-venv/
-env/
-bin/
-lib/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.installed.cfg
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-
-# --- VS Code & IDE ---
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# --- OS & Misc ---
-.DS_Store
-Thumbs.db
+.venv_quizsvc/
 .env
-.local
-
-# --- wandb ---
-wandb
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.DS_Store
+stt_quiz_service.db
+tmp/
+outputs/
+data/processed/
+data/checkpoints/
+.streamlit/secrets.toml
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+frontend/tailwind.config.js
+frontend/tailwind.config.d.ts
+.playwright-cli/
+output/
+temp.txt
+artifacts/stitch/
+ssh-ed25519*
+private_runtime_bundles/
+artifacts/preprocessed/
+artifacts/pipeline_state/
+artifacts/runpod_fetch/
+NLP_Task2/강의 스크립트/
+NLP_Task2/강의 커리큘럼.csv
+NLP_Task2/기존 퀴즈 샘플.pdf
