@@ -45,10 +45,20 @@ cd Instruction-Generator
 
 ```bash
 python3 -m venv .venv_quizsvc
+./.venv_quizsvc/bin/python -m pip install --upgrade pip setuptools wheel
 ./.venv_quizsvc/bin/pip install -e ".[dev]"
 ```
 
 `zsh`에서는 `.[dev]`를 glob으로 해석할 수 있으므로 따옴표를 유지한다.
+
+이전에 설치가 실패했다면 기존 가상환경을 지우고 다시 만드는 편이 빠르다.
+
+```bash
+rm -rf .venv_quizsvc
+python3 -m venv .venv_quizsvc
+./.venv_quizsvc/bin/python -m pip install --upgrade pip setuptools wheel
+./.venv_quizsvc/bin/pip install -e ".[dev]"
+```
 
 ### 4. Install frontend dependencies
 
@@ -86,6 +96,14 @@ generation / LLM 기능까지 쓰려면 추가:
 `No module named 'stt_quiz_service'`가 보이면:
 - 먼저 `./.venv_quizsvc/bin/pip install -e ".[dev]"`가 정상 완료됐는지 확인한다.
 - 현재 스크립트는 `src/` 경로를 자동 bootstrap하지만, 의존성 설치는 여전히 필요하다.
+
+`No module named 'dotenv'`가 보이면:
+- editable install이 중간에 실패한 상태다.
+- 위의 가상환경 재생성 순서로 다시 설치한다.
+
+`Failed to build 'pyyaml'`가 보이면:
+- 오래된 `PyYAML` 소스 배포본이 선택된 경우다.
+- 현재 저장소는 `PyYAML>=6.0.2`로 고정되어 있으므로, 최신 `main`을 다시 pull/clone한 뒤 가상환경을 새로 만들고 다시 설치한다.
 
 ### 7. Start the backend
 
