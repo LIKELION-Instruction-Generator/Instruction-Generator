@@ -64,6 +64,10 @@ full generation / 실험 / Streamlit UI까지 쓰려면:
 
 이 extra는 현재 저장소에서 실제 검증된 버전 조합으로 고정되어 있다. generation이 필요하면 최신 `main` 기준으로만 설치한다.
 
+주의:
+- PostgreSQL/pgvector 연동은 현재 `pgvector==0.3.6` 기준으로 고정되어 있다.
+- 이는 `langchain-postgres`와 충돌 없이 설치되는 조합이다.
+
 이전에 설치가 실패했다면 기존 가상환경을 지우고 다시 만드는 편이 빠르다.
 
 ```bash

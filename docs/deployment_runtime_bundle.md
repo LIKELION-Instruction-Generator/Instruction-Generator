@@ -154,6 +154,7 @@ runtime-data-bundle/
 - `Failed to build 'pyyaml'`가 보이면 최신 저장소 기준으로 다시 clone/pull 하고, 가상환경을 재생성한 뒤 재설치한다. 현재 저장소는 `PyYAML>=6.0.2`를 직접 고정한다.
 - `resolution-too-deep`가 보이면 기본 런타임만 다시 설치한다. full generation/실험 경로가 필요할 때만 `.[dev,generation,ui]`를 추가 설치한다.
 - `generation` extra는 현재 저장소에서 실제 검증된 버전 조합으로 고정한다. generation 경로가 필요하면 최신 `main`으로 다시 맞춘 뒤 설치한다.
+- PostgreSQL/pgvector 연동은 현재 `pgvector==0.3.6` 기준으로 고정한다. 이는 `langchain-postgres`와 충돌 없이 설치되는 조합이다.
 
 ## 검증 기준
 

@@ -14,7 +14,7 @@ dependencies = [
   "python-dotenv>=1.1.1",
   "sqlalchemy>=2.0.48",
   "psycopg[binary]>=3.3.3",
-  "pgvector>=0.4.2",
+  "pgvector==0.3.6",
   "openai>=1.109.1",
   "pydantic>=2.12.5",
   "pydantic-ai>=1.67.0",
