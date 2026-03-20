@@ -6,6 +6,10 @@ import re
 from pathlib import Path
 from uuid import uuid4
 
+from _bootstrap import bootstrap_src_path
+
+bootstrap_src_path()
+
 from stt_quiz_service.config import load_settings
 from stt_quiz_service.prompts import read_prompt_section
 from stt_quiz_service.orchestrator import WorkflowOrchestrator

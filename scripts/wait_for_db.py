@@ -3,6 +3,10 @@ from __future__ import annotations
 import sys
 import time
 
+from _bootstrap import bootstrap_src_path
+
+bootstrap_src_path()
+
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 

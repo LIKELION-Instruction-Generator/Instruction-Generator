@@ -37,7 +37,8 @@ cd Instruction-Generator
 
 ### 2. Copy the private runtime data bundle
 
-아래 문서의 구조 그대로 repo root에 복사합니다.
+압축을 푼 뒤, 번들 폴더 **안의 내용물**을 repo root에 복사합니다.
+- 즉 `NLP_Task2/` 와 `artifacts/` 가 repo root 바로 아래에 와야 합니다.
 - [deployment_runtime_bundle.md](docs/deployment_runtime_bundle.md)
 
 ### 3. Create Python environment
@@ -81,6 +82,10 @@ generation / LLM 기능까지 쓰려면 추가:
 ```
 
 정상이라면 `runtime data bundle check: ok ...`가 출력됩니다.
+
+`No module named 'stt_quiz_service'`가 보이면:
+- 먼저 `./.venv_quizsvc/bin/pip install -e ".[dev]"`가 정상 완료됐는지 확인한다.
+- 현재 스크립트는 `src/` 경로를 자동 bootstrap하지만, 의존성 설치는 여전히 필요하다.
 
 ### 7. Start the backend
 

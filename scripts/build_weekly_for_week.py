@@ -4,6 +4,10 @@ import argparse
 from pathlib import Path
 import sys
 
+from _bootstrap import bootstrap_src_path
+
+bootstrap_src_path()
+
 from stt_quiz_service.config import load_settings
 from stt_quiz_service.orchestrator import WorkflowOrchestrator
 from stt_quiz_service.storage.db import build_engine, build_session_factory

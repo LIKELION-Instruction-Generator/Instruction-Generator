@@ -104,6 +104,7 @@ runtime-data-bundle/
 권장 사용 방식:
 - GitHub clone 후 repo root에 위 경로 그대로 덮어쓰기/복사
 - 경로를 바꾸지 않으면 현재 스크립트를 수정할 필요가 없다
+- zip을 푼 뒤 `runtime-data-bundle-.../` 폴더 자체를 두는 것이 아니라, 그 안의 `NLP_Task2/` 와 `artifacts/` 디렉터리를 repo root로 복사해야 한다
 
 ## 환경변수
 

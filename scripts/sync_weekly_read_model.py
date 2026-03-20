@@ -3,6 +3,10 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from _bootstrap import bootstrap_src_path
+
+bootstrap_src_path()
+
 from stt_quiz_service.config import load_settings
 from stt_quiz_service.services.weekly_baseline_sync import sync_weekly_read_model
 from stt_quiz_service.storage.db import build_engine, build_session_factory
