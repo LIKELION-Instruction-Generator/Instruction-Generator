@@ -44,8 +44,10 @@ cd Instruction-Generator
 
 ```bash
 python3 -m venv .venv_quizsvc
-./.venv_quizsvc/bin/pip install -e .[dev]
+./.venv_quizsvc/bin/pip install -e ".[dev]"
 ```
+
+`zsh`에서는 `.[dev]`를 glob으로 해석할 수 있으므로 따옴표를 유지한다.
 
 ### 4. Install frontend dependencies
 

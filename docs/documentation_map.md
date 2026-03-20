@@ -39,47 +39,32 @@
 
 ## Active implementation docs
 
-현재 구현/마이그레이션 맥락에서 참조 가능한 문서:
+public repo에는 **실행과 현재 상태 이해에 필요한 문서만 포함**한다.
 
-- `docs/weekly_quiz_rag_langchain_migration_guide_2026-03-17.md`
-  - quiz strict RAG 마이그레이션 기준
-- `docs/quiz_submit_hardening_split_2026-03-17.md`
-  - quiz submit hardening 단계의 문제 정의, 분업, 순서, 프롬프트
-- `docs/learner_memo_and_report_refine_2026-03-17.md`
-  - learner memo / report 정리 작업의 구현 배경 문서
-  - 현재 API contract의 canonical source는 아니며, 최종 상태 판단은 `docs/current_state_snapshot_2026-03-18.md`와 `docs/architecture.md`를 우선한다
-- `docs/local_cleanup_inventory_2026-03-18.md`
-  - 로컬 정리 후보와 keep/delete 기준
-- `docs/frontend_rebuild_checklist_2026-03-17.md`
-  - frontend weekly web app 정렬 체크리스트
-- `docs/frontend_rebuild_work_log_2026-03-17.md`
-  - frontend 작업 로그
+현재 public repo에서 추가로 참고 가능한 문서:
+
+- `docs/llm_prompts.md`
+  - runtime prompt single source
+  - `src/stt_quiz_service/prompts.py`가 직접 읽는 파일
+
+주의:
+- 로컬에서 사용했던 상세 작업 로그, handoff 문서, historical prompt 문서는 public repo에 모두 포함하지 않을 수 있다.
+- 실행과 현재 상태 판단은 canonical docs만으로 가능해야 한다.
 
 ## Historical / archived docs
 
-아래 문서는 보존은 하지만 **현재 기준 문서가 아니다**.
+historical / archived 문서는 로컬 작업 기록 기준으로 보존될 수 있지만, public repo에는 포함하지 않을 수 있다.
 
-- `docs/runpod_handoff_2026-03-17.md`
-  - historical handoff
-- `docs/server_prompt_weekly_quiz_rag_2026-03-17.md`
-  - historical execution prompt
-- `docs/server_prompt_weekly_quiz_grounded_quality_refine_2026-03-17.md`
-  - historical execution prompt
-- `artifacts/runpod_fetch/gpu_backup_20260317/progress.md`
-  - Runpod historical progress
-- `artifacts/runpod_fetch/server_work_20260317/progress.md`
-  - Runpod historical progress
-- `docs/error-report.md`
-  - incident archive
+중요:
+- public repo 기준으로는 historical 문서 부재가 실행 blocker가 되면 안 된다.
+- 실행과 협업 재현에 필요한 정보는 canonical docs 또는 `docs/llm_prompts.md` 안에만 남긴다.
 
 ## Checklist docs
 
-`docs/checklists/` 아래 문서는 세부 구현 단계별 체크리스트다.
+세부 체크리스트 문서는 public repo에서 생략될 수 있다.
 
 주의:
-- 이 체크리스트들은 현재 상태를 완전히 대표하지 않을 수 있다.
 - 제품 현재 상태 판단은 `docs/current_state_snapshot_2026-03-18.md`, `docs/architecture.md`, `docs/local_week1_baseline_progress.md`를 우선한다.
-- `docs/checklists/seeded_baseline_test_progress_2026-03-17.md`는 테스트 보조 기록이며, baseline의 canonical 진행 문서는 아니다.
 
 ## 운영 원칙
 

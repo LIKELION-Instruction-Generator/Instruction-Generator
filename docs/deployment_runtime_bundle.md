@@ -131,7 +131,7 @@ runtime-data-bundle/
 2. private runtime data bundle을 repo root에 복사
 3. Python 환경 준비
    - `python3 -m venv .venv_quizsvc`
-   - `./.venv_quizsvc/bin/pip install -e .[dev]`
+   - `./.venv_quizsvc/bin/pip install -e ".[dev]"`
 4. frontend 환경 준비
    - `cd frontend && npm install`
 5. runtime data 확인
@@ -144,6 +144,9 @@ runtime-data-bundle/
     - uvicorn 실행
 7. frontend 실행
   - `cd frontend && npm run dev`
+
+주의:
+- `zsh`에서는 `.[dev]`를 glob으로 해석할 수 있으므로 `pip install -e ".[dev]"`처럼 따옴표를 유지한다.
 
 ## 검증 기준
 
