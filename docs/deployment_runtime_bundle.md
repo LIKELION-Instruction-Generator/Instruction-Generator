@@ -134,6 +134,7 @@ runtime-data-bundle/
    - `python3 -m venv .venv_quizsvc`
    - `./.venv_quizsvc/bin/python -m pip install --upgrade pip setuptools wheel`
    - `./.venv_quizsvc/bin/pip install -e ".[dev]"`
+   - 참고: 이 기본 설치는 accepted week 1 웹앱 런타임용 최소 의존성만 설치한다.
 4. frontend 환경 준비
    - `cd frontend && npm install`
 5. runtime data 확인
@@ -151,6 +152,7 @@ runtime-data-bundle/
 - `zsh`에서는 `.[dev]`를 glob으로 해석할 수 있으므로 `pip install -e ".[dev]"`처럼 따옴표를 유지한다.
 - `No module named 'dotenv'`는 editable install이 완료되지 않았다는 뜻이다. 가상환경을 새로 만든 뒤 다시 설치한다.
 - `Failed to build 'pyyaml'`가 보이면 최신 저장소 기준으로 다시 clone/pull 하고, 가상환경을 재생성한 뒤 재설치한다. 현재 저장소는 `PyYAML>=6.0.2`를 직접 고정한다.
+- `resolution-too-deep`가 보이면 기본 런타임만 다시 설치한다. full generation/실험 경로가 필요할 때만 `.[dev,generation,ui]`를 추가 설치한다.
 
 ## 검증 기준
 

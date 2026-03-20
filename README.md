@@ -51,6 +51,17 @@ python3 -m venv .venv_quizsvc
 
 `zsh`에서는 `.[dev]`를 glob으로 해석할 수 있으므로 따옴표를 유지한다.
 
+기본 설치(`.[dev]`)는 **week 1 런타임 서비스 표면**에 필요한 최소 의존성만 설치한다.
+- hub / quiz / report
+- submit / score / latest review
+- learner memo / 오답 리뷰
+
+full generation / 실험 / Streamlit UI까지 쓰려면:
+
+```bash
+./.venv_quizsvc/bin/pip install -e ".[dev,generation,ui]"
+```
+
 이전에 설치가 실패했다면 기존 가상환경을 지우고 다시 만드는 편이 빠르다.
 
 ```bash
@@ -104,6 +115,17 @@ generation / LLM 기능까지 쓰려면 추가:
 `Failed to build 'pyyaml'`가 보이면:
 - 오래된 `PyYAML` 소스 배포본이 선택된 경우다.
 - 현재 저장소는 `PyYAML>=6.0.2`로 고정되어 있으므로, 최신 `main`을 다시 pull/clone한 뒤 가상환경을 새로 만들고 다시 설치한다.
+
+`resolution-too-deep`가 보이면:
+- generation 의존성까지 한 번에 풀려는 오래된 환경/설치 흔적일 가능성이 높다.
+- 우선 기본 런타임 설치만 다시 수행한다:
+
+```bash
+rm -rf .venv_quizsvc
+python3 -m venv .venv_quizsvc
+./.venv_quizsvc/bin/python -m pip install --upgrade pip setuptools wheel
+./.venv_quizsvc/bin/pip install -e ".[dev]"
+```
 
 ### 7. Start the backend
 
