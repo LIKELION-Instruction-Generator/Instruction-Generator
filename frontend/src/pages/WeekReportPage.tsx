@@ -5,6 +5,7 @@ import { ProfileDistributionPanel } from "../components/report/ProfileDistributi
 import { ReportMetricCards } from "../components/report/ReportMetricCards";
 import { TopicCoveragePanel } from "../components/report/TopicCoveragePanel";
 import { LearnerMemoCard } from "../components/weekly/LearnerMemoCard";
+import { WeekSelector } from "../components/weekly/WeekSelector";
 import { WeekTabs } from "../components/weekly/WeekTabs";
 import { useWeeklyReportResponse } from "../hooks/useWeeklyReportResponse";
 import { ApiError } from "../services/api/client";
@@ -168,7 +169,8 @@ export function WeekReportPage() {
               </Link>
             </div>
           </div>
-          <div className="mt-5">
+          <div className="mt-5 flex flex-col gap-3">
+            <WeekSelector />
             <WeekTabs weekId={bundle.week.week_id} />
           </div>
         </header>

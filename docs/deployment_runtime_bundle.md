@@ -40,7 +40,7 @@
 현재 week 1 서비스 실행에 실제로 필요한 private 데이터는 아래다.
 
 1. curriculum
-- `NLP_Task2/강의 커리큘럼.csv`
+- `NLP_Task2/강의_커리큘럼.csv`
 
 2. prepared corpus JSON (week 1만)
 - `artifacts/preprocessed/2026-02-02.json`
@@ -86,7 +86,7 @@
 ```text
 runtime-data-bundle/
   NLP_Task2/
-    강의 커리큘럼.csv
+    강의_커리큘럼.csv
   artifacts/
     preprocessed/
       2026-02-02.json

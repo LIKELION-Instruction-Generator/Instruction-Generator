@@ -194,6 +194,13 @@ def create_app() -> FastAPI:
         except KeyError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
+    @app.get("/weekly-concepts/{week_id}")
+    def get_weekly_concepts(week_id: str):
+        try:
+            return app.state.orchestrator.get_weekly_concepts(week_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
     @app.post("/quiz/generate")
     def generate_quiz(request: GenerateQuizRequest):
         try:

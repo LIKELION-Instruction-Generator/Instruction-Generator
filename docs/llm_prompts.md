@@ -44,14 +44,16 @@
 
 ## Quiz Generation System Prompt
 
-- v1은 선다형만 생성한다.
 - `items`는 비어 있으면 안 된다.
 - 반드시 요청된 `num_questions` 개수만큼 문항을 생성한다. 최소 5문항 이상이다.
-- 각 문항은 `question_profile, choice_count, question, options, answer_index, answer_text, explanation, difficulty, evidence_chunk_ids, learning_goal`를 포함한다.
-- 문항은 `basic_eval_4 / review_5 / retest_5` 중 하나의 프로필을 가진다.
+- 문항은 `basic_eval_4 / review_5 / retest_5 / short_answer` 중 하나의 프로필을 가진다.
+- 선다형 문항(`basic_eval_4 / review_5 / retest_5`)은 `question_profile, choice_count, question, options, answer_index, answer_text, explanation, difficulty, evidence_chunk_ids, learning_goal`를 포함한다.
+- 주관식 문항(`short_answer`)은 `question_profile, question, answer_text_open, scoring_keywords, explanation, difficulty, evidence_chunk_ids, learning_goal`를 포함한다. `choice_count, options, answer_index`는 포함하지 않는다.
 - `basic_eval_4`는 4지선다, `review_5`와 `retest_5`는 5지선다를 사용한다.
 - 정답은 하나만 허용한다.
 - 다중선택형 문구를 쓰지 않는다. `모두 고르시오`, `해당하는 것을 모두`, `복수 선택` 같은 표현은 금지한다.
+- `short_answer`의 `answer_text_open`은 1~2문장 이내의 간결한 모범답안이어야 한다.
+- `short_answer`의 `scoring_keywords`는 채점 기준이 되는 핵심 개념어 2~4개다. 학습자 답변에 이 키워드가 포함되어 있으면 정답으로 처리된다.
 - explanation은 evidence와 모순되면 안 된다.
 - learning_goal을 벗어난 세부 trivia를 우선하지 않는다.
 - 각 문항의 `evidence_chunk_ids`에는 실제 context에 존재하는 chunk id만 넣는다.
@@ -99,10 +101,12 @@
 - 모든 문항은 `WeeklyQuizItem` schema를 따라야 한다.
 - 모든 문항은 하나의 `topic_axis_label`에만 연결되어야 한다.
 - 가능한 경우 최소 2개의 서로 다른 topic axis가 문항에 반영되어야 한다.
+- 문항은 `basic_eval_4 / review_5 / retest_5 / short_answer` 중 하나의 프로필을 가진다.
 - `basic_eval_4`는 4지선다, `review_5`와 `retest_5`는 5지선다를 사용한다.
 - `retest_5`는 구분/오개념/혼동 가능성을 묻는 문항이어야 한다.
 - 정답은 하나만 허용한다.
 - 다중선택형 문구를 쓰지 않는다.
+- `short_answer` 문항은 `choice_count, options, answer_index`를 포함하지 않는다. 대신 `answer_text_open`(1~2문장 모범답안)과 `scoring_keywords`(핵심 개념어 2~4개)를 포함해야 한다.
 - `evidence_chunk_ids`에는 실제 입력 context에 존재하는 chunk id만 넣는다.
 - 문제는 weekly topic axes와 supporting terms를 기준으로 작성하되, 입력 context 밖의 지식을 확장하지 않는다.
 - 출력은 반드시 `WeeklyQuizSet` schema만 반환한다.

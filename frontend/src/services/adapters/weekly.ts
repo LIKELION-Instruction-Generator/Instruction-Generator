@@ -22,6 +22,7 @@ const PROFILE_LABELS: Record<QuestionProfile, string> = {
   basic_eval_4: "기초 확인",
   review_5: "복습 확인",
   retest_5: "다시 확인",
+  short_answer: "단답 서술",
 };
 
 export function formatWeekRange(dates: string[]) {
@@ -130,6 +131,9 @@ export function getProfileAccentClass(profile: string) {
   }
   if (profile === "review_5") {
     return "bg-amber-100 text-amber-700 border-amber-200";
+  }
+  if (profile === "short_answer") {
+    return "bg-violet-100 text-violet-700 border-violet-200";
   }
   return "bg-orange-100 text-orange-700 border-orange-200";
 }
@@ -339,14 +343,19 @@ export function getUnansweredQuestionNumbers(
 
 export function buildWeeklyQuizSubmissionRequest(
   answerMap: AnswerMap,
+  items: WeeklyQuizLearnerItem[],
 ): WeeklyQuizSubmissionRequest {
+  const itemById = new Map(items.map((item) => [item.item_id, item]));
   return {
     answers: Object.entries(answerMap)
-      .filter(([, selectedOptionIndex]) => selectedOptionIndex !== null)
-      .map(([itemId, selectedOptionIndex]) => ({
-        item_id: itemId,
-        selected_option_index: selectedOptionIndex as number,
-      })),
+      .filter(([, answer]) => answer !== null)
+      .map(([itemId, answer]) => {
+        const item = itemById.get(itemId);
+        if (item?.question_profile === "short_answer") {
+          return { item_id: itemId, selected_text: answer as string };
+        }
+        return { item_id: itemId, selected_option_index: answer as number };
+      }),
   };
 }
 
@@ -392,7 +401,10 @@ export function getPagedReviewResults(
 }
 
 export function getSelectedAnswerText(result: WeeklyQuizReviewResult) {
-  if (result.selected_option_index === null) {
+  if (result.selected_text != null) {
+    return result.selected_text || "미응답";
+  }
+  if (result.selected_option_index === null || result.selected_option_index === undefined) {
     return "미응답";
   }
   return result.options[result.selected_option_index] ?? "선택 정보 없음";

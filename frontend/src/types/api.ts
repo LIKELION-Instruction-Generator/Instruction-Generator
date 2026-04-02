@@ -1,4 +1,4 @@
-export type QuestionProfile = "basic_eval_4" | "review_5" | "retest_5";
+export type QuestionProfile = "basic_eval_4" | "review_5" | "retest_5" | "short_answer";
 
 export interface TopicAxis {
   label: string;
@@ -24,7 +24,7 @@ export interface WeeklyGuide {
 export interface WeeklyQuizLearnerItem {
   item_id: string;
   question_profile: QuestionProfile;
-  choice_count: 4 | 5;
+  choice_count?: 4 | 5 | null;
   question: string;
   options: string[];
   difficulty: string;
@@ -35,9 +35,10 @@ export interface WeeklyQuizLearnerItem {
   source_date: string;
   retrieved_chunk_ids: string[];
   learning_goal_source?: "metadata" | "generated";
+  scoring_keywords: string[];
 }
 
-export type AnswerMap = Record<string, number | null>;
+export type AnswerMap = Record<string, number | string | null>;
 
 export interface WeeklyQuizLearnerSet {
   week_id: string;
@@ -120,7 +121,8 @@ export interface WeeklyBundlePayload {
 
 export interface WeeklyQuizSubmissionAnswer {
   item_id: string;
-  selected_option_index: number;
+  selected_option_index?: number | null;
+  selected_text?: string | null;
 }
 
 export interface WeeklyQuizSubmissionRequest {
@@ -130,8 +132,10 @@ export interface WeeklyQuizSubmissionRequest {
 export interface WeeklyQuizSubmissionResult {
   item_id: string;
   selected_option_index: number | null;
-  correct_option_index: number;
+  selected_text?: string | null;
+  correct_option_index: number | null;
   answer_text: string;
+  answer_text_open?: string | null;
   explanation: string;
   is_correct: boolean;
 }
@@ -152,8 +156,10 @@ export interface WeeklyQuizReviewResult {
   question: string;
   options: string[];
   selected_option_index: number | null;
-  correct_option_index: number;
+  selected_text?: string | null;
+  correct_option_index: number | null;
   answer_text: string;
+  answer_text_open?: string | null;
   explanation: string;
   is_correct: boolean;
   topic_axis_label: string;
@@ -177,4 +183,17 @@ export interface WeeklyQuizSubmissionDetailResponse {
 
 export interface ApiErrorPayload {
   detail?: string;
+}
+
+export interface ConceptTerm {
+  term: string;
+  score: number;
+  rank: number;
+}
+
+export interface WeeklyConceptMapResponse {
+  week_id: string;
+  terms: ConceptTerm[];
+  max_score: number;
+  min_score: number;
 }

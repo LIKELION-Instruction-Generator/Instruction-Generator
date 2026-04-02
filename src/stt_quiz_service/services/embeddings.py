@@ -45,6 +45,7 @@ class HashEmbedder(BaseEmbedder):
 
 class OpenAIEmbedder(BaseEmbedder):
     provider_name = "openai"
+    MAX_TOKENS_PER_TEXT = 8192
 
     def __init__(self, model: str, *, max_batch_tokens: int = 250_000, max_batch_texts: int = 128):
         self.client = OpenAI()
@@ -56,9 +57,21 @@ class OpenAIEmbedder(BaseEmbedder):
         except Exception:
             self.encoding = None
 
+    def _truncate_text(self, text: str) -> str:
+        """Truncate text so it does not exceed MAX_TOKENS_PER_TEXT tokens."""
+        if self.encoding is None:
+            # Rough char-based fallback: ~4 chars per token
+            max_chars = self.MAX_TOKENS_PER_TEXT * 4
+            return text[: max_chars]
+        tokens = self.encoding.encode(text)
+        if len(tokens) <= self.MAX_TOKENS_PER_TEXT:
+            return text
+        return self.encoding.decode(tokens[: self.MAX_TOKENS_PER_TEXT])
+
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        truncated = [self._truncate_text(t) for t in texts]
         embeddings: list[list[float]] = []
-        for batch in self._batch_texts(texts):
+        for batch in self._batch_texts(truncated):
             response = self.client.embeddings.create(model=self.model, input=batch)
             embeddings.extend(item.embedding for item in response.data)
         return embeddings

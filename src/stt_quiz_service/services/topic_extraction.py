@@ -11,6 +11,15 @@ from stt_quiz_service.schemas import ChunkDocument, DailyTermCandidate, DailyTer
 
 
 TOKEN_RE = re.compile(r"[A-Za-z0-9가-힣][A-Za-z0-9가-힣_./+-]{1,}")
+
+# kiwipiepy 품사 태그 중 기술 키워드로 의미 있는 것만 유지
+# NNG: 일반명사 (모델, 어텐션, 벡터)
+# NNP: 고유명사 (트랜스포머, BERT, GPT)
+# SL:  외래어   (Attention, Embedding, Softmax)
+# SH:  한자어
+# 제외: MAG(일반부사), MAJ(접속부사), NNB(의존명사: 것/수/때), NP(대명사), VV(동사) 등
+NOUN_TAGS = {"NNG", "NNP", "SL", "SH"}
+
 GENERIC_TERMS = {
     "오늘",
     "오늘은",
@@ -73,6 +82,7 @@ class DailyTermCandidateExtractor:
     settings: Settings
     _keybert_model: object | None = field(default=None, init=False, repr=False)
     _embedding_device: str | None = field(default=None, init=False, repr=False)
+    _kiwi_model: object | None = field(default=None, init=False, repr=False)
 
     def extract(
         self,
@@ -84,11 +94,13 @@ class DailyTermCandidateExtractor:
         progress_callback: Callable[[str], None] | None = None,
     ) -> DailyTermCandidates:
         self._emit(progress_callback, "candidate extraction start")
-        yake_terms = self._extract_yake(cleaned_text)
+        noun_text = self._noun_only_text(cleaned_text)
+        self._emit(progress_callback, f"noun extraction done chars={len(noun_text)}")
+        yake_terms = self._extract_yake(noun_text)
         self._emit(progress_callback, f"yake done terms={len(yake_terms)}")
         _model, device = self._build_keybert()
         self._emit(progress_callback, f"keybert init device={device}")
-        keybert_terms = self._extract_keybert(cleaned_text)
+        keybert_terms = self._extract_keybert(noun_text)
         self._emit(progress_callback, f"keybert done terms={len(keybert_terms)}")
         combined = self._combine_rankings(yake_terms, keybert_terms)
         self._emit(progress_callback, f"ranking merged candidates={len(combined)}")
@@ -130,6 +142,42 @@ class DailyTermCandidateExtractor:
                 "sentence-transformers is not installed. Install weekly topic extraction dependencies first."
             ) from exc
         return SentenceTransformer
+
+    @staticmethod
+    def _import_kiwi():
+        try:
+            from kiwipiepy import Kiwi
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "kiwipiepy is not installed. Install weekly topic extraction dependencies first."
+            ) from exc
+        return Kiwi
+
+    def _build_kiwi(self) -> object:
+        if self._kiwi_model is not None:
+            return self._kiwi_model
+        Kiwi = self._import_kiwi()
+        self._kiwi_model = Kiwi()
+        return self._kiwi_model
+
+    def _noun_only_text(self, text: str) -> str:
+        """원문에서 명사·외래어 토큰만 추출하여 공백으로 이어 붙인 텍스트를 반환한다.
+        YAKE/KeyBERT 입력용. 부사·접속어·조사·어미 등은 이 단계에서 제거된다."""
+        kiwi = self._build_kiwi()
+        tokens = kiwi.tokenize(text)
+        # 문장 경계(SF)를 개행으로 보존해 YAKE의 n-gram이 문장을 넘어가지 않도록 함
+        result_lines: list[str] = []
+        current_line: list[str] = []
+        for token in tokens:
+            if token.tag == "SF":
+                if current_line:
+                    result_lines.append(" ".join(current_line))
+                    current_line = []
+            elif token.tag in NOUN_TAGS:
+                current_line.append(token.form)
+        if current_line:
+            result_lines.append(" ".join(current_line))
+        return "\n".join(result_lines)
 
     @staticmethod
     def _select_embedding_device() -> str:
@@ -250,6 +298,9 @@ class DailyTermCandidateExtractor:
             return False
         tokens = [token.casefold() for token in TOKEN_RE.findall(term)]
         if not tokens:
+            return False
+        # 반복 단어 포함 n-gram 차단 ("테이블 EMP 테이블" 등)
+        if len(tokens) != len(set(tokens)):
             return False
         if tokens[0] in GENERIC_TERMS or tokens[-1] in GENERIC_TERMS:
             return False

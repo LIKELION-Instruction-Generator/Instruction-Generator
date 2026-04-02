@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { QuestionProgress } from "../components/quiz/QuestionProgress";
 import { QuizQuestionCard } from "../components/quiz/QuizQuestionCard";
+import { WeekSelector } from "../components/weekly/WeekSelector";
 import { WeekTabs } from "../components/weekly/WeekTabs";
 import { ApiError } from "../services/api/client";
 import { submitWeeklyQuiz } from "../services/api/weekly";
@@ -62,13 +63,13 @@ export function WeekQuizPage() {
   );
   const currentResult = currentItem ? submissionResultMap[currentItem.item_id] ?? null : null;
 
-  function handleSelectAnswer(itemId: string, optionIndex: number) {
+  function handleSelectAnswer(itemId: string, answer: number | string) {
     if (submission) {
       return;
     }
     setAnswers((currentAnswers) => ({
       ...currentAnswers,
-      [itemId]: optionIndex,
+      [itemId]: answer,
     }));
     setLocalValidationMessage(null);
     setSubmitError(null);
@@ -91,7 +92,7 @@ export function WeekQuizPage() {
     try {
       const response = await submitWeeklyQuiz(
         bundle.week.week_id,
-        buildWeeklyQuizSubmissionRequest(answers),
+        buildWeeklyQuizSubmissionRequest(answers, bundle.quiz.items),
       );
       setSubmission(response);
       applyQuizSubmission(response);
@@ -145,7 +146,9 @@ export function WeekQuizPage() {
               </span>
             </div>
           </div>
-          <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="mt-5 flex flex-col gap-3">
+            <WeekSelector />
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <WeekTabs weekId={bundle.week.week_id} />
             <Link
               className="text-sm font-semibold text-slate-500 transition hover:text-orange-600"
@@ -153,6 +156,7 @@ export function WeekQuizPage() {
             >
               허브로 돌아가기
             </Link>
+            </div>
           </div>
         </header>
 
@@ -215,9 +219,9 @@ export function WeekQuizPage() {
           {currentItem ? (
             <QuizQuestionCard
               item={currentItem}
-              onSelectOption={(optionIndex) => handleSelectAnswer(currentItem.item_id, optionIndex)}
+              onAnswer={(answer) => handleSelectAnswer(currentItem.item_id, answer)}
               questionIndex={currentIndex}
-              selectedOptionIndex={answers[currentItem.item_id] ?? null}
+              selectedAnswer={answers[currentItem.item_id] ?? null}
               submissionResult={currentResult}
               submitted={Boolean(submission)}
               totalQuestions={bundle.quiz.items.length}

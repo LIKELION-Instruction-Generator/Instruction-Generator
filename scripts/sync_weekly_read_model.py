@@ -17,11 +17,21 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--week-id", default="1")
     parser.add_argument("--prepared-dir", default="artifacts/preprocessed")
-    parser.add_argument("--topic-set-path", default="artifacts/pipeline_state/weekly_1_topic_set.json")
-    parser.add_argument("--guide-path", default="artifacts/pipeline_state/weekly_1_guide.json")
-    parser.add_argument("--quiz-path", default="artifacts/pipeline_state/weekly_1_quiz.json")
-    parser.add_argument("--report-path", default="artifacts/pipeline_state/weekly_1_report.json")
+    parser.add_argument("--topic-set-path", default=None)
+    parser.add_argument("--guide-path", default=None)
+    parser.add_argument("--quiz-path", default=None)
+    parser.add_argument("--report-path", default=None)
     args = parser.parse_args()
+
+    state_dir = Path("artifacts/pipeline_state")
+    if args.topic_set_path is None:
+        args.topic_set_path = str(state_dir / f"weekly_{args.week_id}_topic_set.json")
+    if args.guide_path is None:
+        args.guide_path = str(state_dir / f"weekly_{args.week_id}_guide.json")
+    if args.quiz_path is None:
+        args.quiz_path = str(state_dir / f"weekly_{args.week_id}_quiz.json")
+    if args.report_path is None:
+        args.report_path = str(state_dir / f"weekly_{args.week_id}_report.json")
 
     settings = load_settings()
     engine = build_engine(settings.database_url)

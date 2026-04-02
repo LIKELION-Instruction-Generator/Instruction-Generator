@@ -1,6 +1,8 @@
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ConceptMapPanel } from "../components/weekly/ConceptMapPanel";
 import { WeekActionRail } from "../components/weekly/WeekActionRail";
+import { WeekSelector } from "../components/weekly/WeekSelector";
 import { WeekSummaryCard } from "../components/weekly/WeekSummaryCard";
 import { WeekTabs } from "../components/weekly/WeekTabs";
 import { useWeeklyReportResponse } from "../hooks/useWeeklyReportResponse";
@@ -13,7 +15,7 @@ import { useWeeklyWorkspace } from "../providers/weekly-workspace";
 
 export function WeekHubPage() {
   const navigate = useNavigate();
-  const { bundle, learnerMemo } = useWeeklyWorkspace();
+  const { bundle, learnerMemo, weeks } = useWeeklyWorkspace();
   const [search, setSearch] = useState("");
   const [sidebarMinHeight, setSidebarMinHeight] = useState<number | null>(null);
   const deferredSearch = useDeferredValue(search);
@@ -92,16 +94,26 @@ export function WeekHubPage() {
 
           <div className="mt-8">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-              현재 주차
+              주차 선택
             </p>
             <div className="mt-3 space-y-2">
-              <button
-                className="w-full rounded-[20px] border border-orange-200 bg-orange-50 px-4 py-3 text-left text-sm font-semibold text-orange-700"
-                onClick={() => navigate(`/weeks/${bundle.week.week_id}/hub`)}
-                type="button"
-              >
-                Week {bundle.week.week}
-              </button>
+              {weeks.map((w) => {
+                const isActive = w.week_id === bundle.week.week_id;
+                return (
+                  <button
+                    className={`w-full rounded-[20px] border px-4 py-3 text-left text-sm font-semibold transition ${
+                      isActive
+                        ? "border-orange-200 bg-orange-50 text-orange-700"
+                        : "border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-orange-600"
+                    }`}
+                    key={w.week_id}
+                    onClick={() => navigate(`/weeks/${w.week_id}/hub`)}
+                    type="button"
+                  >
+                    {w.week}주차
+                  </button>
+                );
+              })}
             </div>
           </div>
         </aside>
@@ -146,7 +158,8 @@ export function WeekHubPage() {
               </div>
             </div>
 
-            <div className="mt-5">
+            <div className="mt-5 flex flex-col gap-3">
+              <WeekSelector />
               <WeekTabs weekId={bundle.week.week_id} />
             </div>
           </div>
@@ -174,6 +187,10 @@ export function WeekHubPage() {
                 week={bundle.week}
               />
             </div>
+          </div>
+
+          <div className="mt-6">
+            <ConceptMapPanel weekId={bundle.week.week_id} />
           </div>
         </main>
       </div>

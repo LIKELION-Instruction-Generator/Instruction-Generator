@@ -19,11 +19,12 @@ from stt_quiz_service.schemas import (
 )
 
 
-PROFILE_SEQUENCE = ["basic_eval_4", "review_5", "basic_eval_4", "review_5", "retest_5"]
+PROFILE_SEQUENCE = ["basic_eval_4", "review_5", "short_answer", "review_5", "retest_5"]
 PROFILE_CHOICE_COUNT = {
     "basic_eval_4": 4,
     "review_5": 5,
     "retest_5": 5,
+    "short_answer": None,
 }
 
 
@@ -69,18 +70,22 @@ class MockWeeklyGenerationBackend(WeeklyGenerationBackend):
                 )
         merged.sort(key=lambda item: (-item[1], item[0]))
         axes: list[TopicAxis] = []
-        for term, _score, evidence_chunk_ids, source_corpus_ids in merged[:3]:
+        top_merged = merged[:3]
+        num_axes = max(len(top_merged), 1)
+        for i, (term, _score, evidence_chunk_ids, _src) in enumerate(top_merged):
             supporting_terms = [term]
             for other_term, _, _, _ in merged:
                 if other_term == term or len(supporting_terms) >= 4:
                     continue
                 supporting_terms.append(other_term)
+            # corpus_ids를 round-robin으로 배분해 모든 corpus가 최소 1개 axis에 포함되도록
+            assigned_corpus_ids = [cid for j, cid in enumerate(week.corpus_ids) if j % num_axes == i]
             axes.append(
                 TopicAxis(
                     label=term,
                     supporting_terms=supporting_terms[:4],
                     evidence_chunk_ids=evidence_chunk_ids[:3] or [chunk.chunk_id for chunk in chunks[:2]],
-                    source_corpus_ids=[],
+                    source_corpus_ids=assigned_corpus_ids,
                 )
             )
         return WeeklyTopicSet(week_id=week.week_id, topic_axes=axes[:3], learning_paragraph="")
@@ -146,14 +151,6 @@ class MockWeeklyGenerationBackend(WeeklyGenerationBackend):
                 axis = corpus_axes[index % len(corpus_axes)]
                 profile = PROFILE_SEQUENCE[index % len(PROFILE_SEQUENCE)]
                 choice_count = PROFILE_CHOICE_COUNT[profile]
-                correct = (
-                    f"`{axis.label}`은/는 {', '.join(axis.supporting_terms[:2])}와 연결되는 주차 핵심 주제이다."
-                    if profile != "retest_5"
-                    else f"`{axis.label}`은/는 supporting terms와 무관하다고 설명되었다."
-                )
-                options = fallback_distractors[: choice_count - 1]
-                answer_index = index % choice_count
-                options.insert(answer_index, correct)
                 evidence_chunk_ids = [
                     chunk_id
                     for chunk_id in axis.evidence_chunk_ids
@@ -174,6 +171,36 @@ class MockWeeklyGenerationBackend(WeeklyGenerationBackend):
                     if len(window) < len(evidence_chunk_ids):
                         window += corpus_chunk_ids[: len(evidence_chunk_ids) - len(window)]
                     evidence_chunk_ids = window[: len(evidence_chunk_ids)]
+
+                if profile == "short_answer":
+                    model_answer = f"`{axis.label}`은/는 {', '.join(axis.supporting_terms[:2])}와 관련된 핵심 개념이다."
+                    items.append(
+                        WeeklyQuizItem(
+                            topic_axis_label=axis.label,
+                            question_profile="short_answer",
+                            question=f"`{axis.label}`이란 무엇인지 핵심 개념을 서술하시오.",
+                            answer_text_open=model_answer,
+                            scoring_keywords=axis.supporting_terms[:3] or [axis.label],
+                            explanation=f"`{axis.label}` 관련 supporting terms와 evidence chunk를 기준으로 판단해야 한다.",
+                            difficulty="medium",
+                            evidence_chunk_ids=evidence_chunk_ids,
+                            learning_goal="핵심 개념을 설명할 수 있다.",
+                            source_corpus_id=corpus_id,
+                            source_date=source_date,
+                            retrieved_chunk_ids=evidence_chunk_ids,
+                            learning_goal_source="generated",
+                        )
+                    )
+                    continue
+
+                correct = (
+                    f"`{axis.label}`은/는 {', '.join(axis.supporting_terms[:2])}와 연결되는 주차 핵심 주제이다."
+                    if profile != "retest_5"
+                    else f"`{axis.label}`은/는 supporting terms와 무관하다고 설명되었다."
+                )
+                options = fallback_distractors[: choice_count - 1]
+                answer_index = index % choice_count
+                options.insert(answer_index, correct)
                 items.append(
                     WeeklyQuizItem(
                         topic_axis_label=axis.label,

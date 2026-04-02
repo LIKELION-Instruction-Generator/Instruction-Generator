@@ -3,6 +3,7 @@ import type {
   WeeklyQuizSubmissionDetailResponse,
   WeeklyQuizSubmissionResponse,
   WeeklyBundleApiResponse,
+  WeeklyConceptMapResponse,
   WeeklyGuide,
   WeeklyQuizLearnerSet,
   WeeklyReportResponse,
@@ -55,4 +56,8 @@ export function getLatestWeeklyQuizSubmission(weekId: string, signal?: AbortSign
     `/weekly-quiz/${weekId}/latest-submission`,
     { signal },
   );
+}
+
+export function getWeeklyConceptMap(weekId: string, signal?: AbortSignal) {
+  return fetchJson<WeeklyConceptMapResponse>(`/weekly-concepts/${weekId}`, { signal });
 }

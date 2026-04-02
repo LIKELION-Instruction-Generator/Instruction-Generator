@@ -201,6 +201,7 @@ def main() -> None:
                     LectureTargetDocument(
                         lecture_id=build_lecture_id(row.date, row.session),
                         corpus_id=corpus_id,
+                        week=row.week,
                         date=row.date,
                         session=row.session,
                         subject=row.subject,

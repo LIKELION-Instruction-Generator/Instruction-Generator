@@ -10,18 +10,20 @@ from stt_quiz_service.storage.repository import CorpusSelection
 from stt_quiz_service.services.retrieval import extract_concepts
 
 
-QuestionProfile = Literal["basic_eval_4", "review_5", "retest_5"]
+QuestionProfile = Literal["basic_eval_4", "review_5", "retest_5", "short_answer"]
 
 PROFILE_WEIGHTS: dict[QuestionProfile, float] = {
-    "basic_eval_4": 0.35,
-    "review_5": 0.40,
-    "retest_5": 0.25,
+    "basic_eval_4": 0.28,
+    "review_5": 0.32,
+    "retest_5": 0.20,
+    "short_answer": 0.20,
 }
-PROFILE_PRIORITY: list[QuestionProfile] = ["review_5", "basic_eval_4", "retest_5"]
-PROFILE_CHOICE_COUNT: dict[QuestionProfile, int] = {
+PROFILE_PRIORITY: list[QuestionProfile] = ["review_5", "basic_eval_4", "retest_5", "short_answer"]
+PROFILE_CHOICE_COUNT: dict[QuestionProfile, int | None] = {
     "basic_eval_4": 4,
     "review_5": 5,
     "retest_5": 5,
+    "short_answer": None,
 }
 RETEST_SIGNAL_RE = re.compile(
     r"(차이|비교|반면|구분|혼동|헷갈|오해|주의|반대로|vs|대조|구별|틀린|옳지 않은|잘못된)"
@@ -67,6 +69,8 @@ def determine_eligible_profiles(
         eligible.append("review_5")
     if len(concepts) >= 2 and _has_retest_signals(lecture, chunks):
         eligible.append("retest_5")
+    if chunks:
+        eligible.append("short_answer")
     return eligible or ["basic_eval_4"]
 
 
@@ -81,10 +85,12 @@ def allocate_profile_counts(
         adjusted_weights["basic_eval_4"] += 0.15
         adjusted_weights["review_5"] = max(0.05, adjusted_weights["review_5"] - 0.05)
         adjusted_weights["retest_5"] = max(0.05, adjusted_weights["retest_5"] - 0.10)
+        adjusted_weights["short_answer"] = max(0.05, adjusted_weights["short_answer"] - 0.05)
     elif preferred_choice_count == 5:
-        adjusted_weights["basic_eval_4"] = max(0.05, adjusted_weights["basic_eval_4"] - 0.10)
+        adjusted_weights["basic_eval_4"] = max(0.05, adjusted_weights["basic_eval_4"] - 0.05)
         adjusted_weights["review_5"] += 0.05
         adjusted_weights["retest_5"] += 0.05
+        adjusted_weights["short_answer"] = max(0.05, adjusted_weights["short_answer"] - 0.05)
 
     counts: dict[QuestionProfile, int] = {profile: 0 for profile in eligible_profiles}
     min_required = 1 if len(eligible_profiles) > 1 else 0
@@ -201,6 +207,8 @@ def validate_quiz_items(
     for item in items:
         if item.question_profile not in eligible_profiles:
             raise ValueError(f"Ineligible question profile returned: {item.question_profile}")
+        if item.question_profile == "short_answer":
+            continue
         expected_choice_count = PROFILE_CHOICE_COUNT[item.question_profile]
         if item.choice_count != expected_choice_count:
             raise ValueError(
@@ -227,15 +235,18 @@ def validate_quiz_items(
 
 
 def is_discriminative_retest_item(item: QuizItem) -> bool:
+    if item.question_profile != "retest_5":
+        return False
     signal_text = f"{item.question} {item.explanation} {' '.join(item.options)}"
     return (
-        item.question_profile == "retest_5"
-        and len(set(item.options)) == len(item.options)
+        len(set(item.options)) == len(item.options)
         and bool(RETEST_SIGNAL_RE.search(signal_text))
     )
 
 
 def is_single_answer_wording(item: QuizItem) -> bool:
+    if item.question_profile == "short_answer":
+        return True
     signal_text = f"{item.question} {item.explanation}"
     return not MULTI_ANSWER_SIGNAL_RE.search(signal_text)
 

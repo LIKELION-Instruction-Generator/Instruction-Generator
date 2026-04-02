@@ -40,18 +40,30 @@ def _stable_weekly_item_id(
     question_profile: str,
     question: str,
     options: list[str],
-    answer_index: int,
+    answer_index: int | None,
+    answer_text_open: str | None = None,
 ) -> str:
-    payload = {
-        "week_id": week_id,
-        "source_corpus_id": source_corpus_id,
-        "source_date": source_date,
-        "topic_axis_label": topic_axis_label,
-        "question_profile": question_profile,
-        "question": question,
-        "options": options,
-        "answer_index": answer_index,
-    }
+    if question_profile == "short_answer":
+        payload: dict[str, Any] = {
+            "week_id": week_id,
+            "source_corpus_id": source_corpus_id,
+            "source_date": source_date,
+            "topic_axis_label": topic_axis_label,
+            "question_profile": question_profile,
+            "question": question,
+            "answer_text_open": answer_text_open or "",
+        }
+    else:
+        payload = {
+            "week_id": week_id,
+            "source_corpus_id": source_corpus_id,
+            "source_date": source_date,
+            "topic_axis_label": topic_axis_label,
+            "question_profile": question_profile,
+            "question": question,
+            "options": options,
+            "answer_index": answer_index,
+        }
     digest = hashlib.sha256(
         json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
     ).hexdigest()[:16]
@@ -156,12 +168,14 @@ class WeeklyGuide(BaseModel):
 
 
 class QuizItem(BaseModel):
-    question_profile: Literal["basic_eval_4", "review_5", "retest_5"]
-    choice_count: Literal[4, 5]
+    question_profile: Literal["basic_eval_4", "review_5", "retest_5", "short_answer"]
+    choice_count: Literal[4, 5] | None = None
     question: str
-    options: list[str]
-    answer_index: int
-    answer_text: str
+    options: list[str] = Field(default_factory=list)
+    answer_index: int | None = None
+    answer_text: str = ""
+    answer_text_open: str | None = None
+    scoring_keywords: list[str] = Field(default_factory=list)
     explanation: str
     difficulty: str
     evidence_chunk_ids: list[str]
@@ -172,16 +186,25 @@ class QuizItem(BaseModel):
         normalized_question = self.question.replace(" ", "")
         if any(marker.replace(" ", "") in normalized_question for marker in MULTI_SELECT_MARKERS):
             raise ValueError("multi-select wording is not allowed for single-answer quiz items")
+        if not self.evidence_chunk_ids:
+            raise ValueError("at least one evidence_chunk_id is required")
+        if self.question_profile == "short_answer":
+            if not self.answer_text_open:
+                raise ValueError("short_answer items must have answer_text_open")
+            if not self.scoring_keywords:
+                raise ValueError("short_answer items must have scoring_keywords")
+            return self
+        if self.choice_count is None:
+            raise ValueError("choice_count is required for multiple-choice items")
         if len(self.options) != self.choice_count:
             raise ValueError("options length must match choice_count")
         if len(set(self.options)) != len(self.options):
             raise ValueError("duplicate options are not allowed")
-        if not 0 <= self.answer_index < len(self.options):
+        if self.answer_index is None or not 0 <= self.answer_index < len(self.options):
             raise ValueError("answer_index must point to a valid option")
         if self.options[self.answer_index].strip() != self.answer_text.strip():
-            raise ValueError("answer_text must match the option at answer_index")
-        if not self.evidence_chunk_ids:
-            raise ValueError("at least one evidence_chunk_id is required")
+            # LLM이 answer_text와 answer_index를 불일치하게 생성한 경우 자동 보정
+            object.__setattr__(self, "answer_text", self.options[self.answer_index])
         return self
 
 
@@ -218,6 +241,8 @@ class WeeklyQuizItem(QuizItem):
             source_date=self.source_date,
             retrieved_chunk_ids=self.retrieved_chunk_ids,
             learning_goal_source=self.learning_goal_source,
+            # short_answer: scoring_keywords 노출, answer_text_open은 노출 안 함
+            scoring_keywords=self.scoring_keywords,
         )
 
 
@@ -265,6 +290,7 @@ class WeeklyQuizSet(BaseModel):
                 question=item.question,
                 options=item.options,
                 answer_index=item.answer_index,
+                answer_text_open=item.answer_text_open,
             )
             if item.topic_axis_label not in axis_by_label:
                 raise ValueError(f"unknown topic_axis_label in weekly quiz item: {item.topic_axis_label}")
@@ -348,10 +374,10 @@ class WeeklyQuizSet(BaseModel):
 
 class WeeklyQuizLearnerItem(BaseModel):
     item_id: str
-    question_profile: Literal["basic_eval_4", "review_5", "retest_5"]
-    choice_count: Literal[4, 5]
+    question_profile: Literal["basic_eval_4", "review_5", "retest_5", "short_answer"]
+    choice_count: Literal[4, 5] | None = None
     question: str
-    options: list[str]
+    options: list[str] = Field(default_factory=list)
     difficulty: str
     evidence_chunk_ids: list[str]
     learning_goal: str
@@ -360,6 +386,7 @@ class WeeklyQuizLearnerItem(BaseModel):
     source_date: str
     retrieved_chunk_ids: list[str] = Field(default_factory=list)
     learning_goal_source: Literal["metadata", "generated"] = "generated"
+    scoring_keywords: list[str] = Field(default_factory=list)
 
 
 class WeeklyQuizLearnerSet(BaseModel):
@@ -374,7 +401,8 @@ class WeeklyQuizLearnerSet(BaseModel):
 
 class WeeklyQuizSubmissionAnswer(BaseModel):
     item_id: str = Field(min_length=1)
-    selected_option_index: int = Field(ge=0)
+    selected_option_index: int | None = Field(default=None, ge=0)
+    selected_text: str | None = None
 
     @field_validator("item_id")
     @classmethod
@@ -383,6 +411,12 @@ class WeeklyQuizSubmissionAnswer(BaseModel):
         if not normalized:
             raise ValueError("item_id is required")
         return normalized
+
+    @model_validator(mode="after")
+    def validate_answer_provided(self):
+        if self.selected_option_index is None and self.selected_text is None:
+            raise ValueError("either selected_option_index or selected_text must be provided")
+        return self
 
 
 class WeeklyQuizSubmissionRequest(BaseModel):
@@ -400,8 +434,10 @@ class WeeklyQuizSubmissionRequest(BaseModel):
 class WeeklyQuizSubmissionResult(BaseModel):
     item_id: str
     selected_option_index: int | None = None
-    correct_option_index: int
-    answer_text: str
+    selected_text: str | None = None
+    correct_option_index: int | None = None
+    answer_text: str = ""
+    answer_text_open: str | None = None
     explanation: str
     is_correct: bool
 
@@ -420,10 +456,12 @@ class WeeklyQuizSubmissionResponse(BaseModel):
 class WeeklyQuizReviewResult(BaseModel):
     item_id: str
     question: str
-    options: list[str]
+    options: list[str] = Field(default_factory=list)
     selected_option_index: int | None = None
-    correct_option_index: int
-    answer_text: str
+    selected_text: str | None = None
+    correct_option_index: int | None = None
+    answer_text: str = ""
+    answer_text_open: str | None = None
     explanation: str
     is_correct: bool
     topic_axis_label: str
@@ -739,3 +777,16 @@ class WeeklyBundleResponse(BaseModel):
     guide: WeeklyGuide
     quiz_set: WeeklyQuizLearnerSet
     report: WeeklyReport
+
+
+class ConceptTerm(BaseModel):
+    term: str
+    score: float
+    rank: int
+
+
+class WeeklyConceptMapResponse(BaseModel):
+    week_id: str
+    terms: list[ConceptTerm]
+    max_score: float
+    min_score: float

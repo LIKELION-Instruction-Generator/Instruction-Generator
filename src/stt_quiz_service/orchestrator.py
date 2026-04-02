@@ -41,7 +41,9 @@ from stt_quiz_service.schemas import (
     QuizSet,
     RunLog,
     StudyGuide,
+    ConceptTerm,
     WeeklyBundleResponse,
+    WeeklyConceptMapResponse,
     WeeklyGuide,
     WeeklyQuizLearnerSet,
     WeeklyQuizSet,
@@ -157,6 +159,8 @@ class WorkflowOrchestrator:
         settings: Settings,
         repository: Repository,
     ) -> object | None:
+        if os.getenv("STT_QUIZ_USE_LANGCHAIN_WEEKLY", "true").lower() == "false":
+            return None
         if not settings.database_url.startswith("postgresql"):
             return None
         if not (os.getenv("OPENAI_API_KEY") and (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"))):
@@ -753,6 +757,25 @@ class WorkflowOrchestrator:
             guide=guide,
             quiz_set=quiz_set.to_learner_set(),
             report=report,
+        )
+
+    def get_weekly_concepts(self, week_id: str) -> WeeklyConceptMapResponse:
+        candidate_sets = self.repository.list_daily_term_candidates_for_week(week_id)
+        if not candidate_sets:
+            raise KeyError(f"No term candidates for week_id: {week_id}")
+        aggregated = aggregate_weekly_candidates(candidate_sets, limit=60)
+        if not aggregated:
+            raise KeyError(f"No aggregated terms for week_id: {week_id}")
+        scores = [t.score for t in aggregated]
+        terms = [
+            ConceptTerm(term=t.term, score=t.score, rank=idx + 1)
+            for idx, t in enumerate(aggregated)
+        ]
+        return WeeklyConceptMapResponse(
+            week_id=week_id,
+            terms=terms,
+            max_score=max(scores),
+            min_score=min(scores),
         )
 
     def _build_weekly_topic_set(self, week_id: str) -> WeeklyTopicSet:

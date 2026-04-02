@@ -17,7 +17,12 @@ if [[ "${DATABASE_URL}" == postgresql* ]]; then
 fi
 
 if [[ "${STT_QUIZ_SYNC_ACCEPTED_WEEKLY_BASELINE:-true}" == "true" ]]; then
-  "${ROOT_DIR}/.venv_quizsvc/bin/python" "${ROOT_DIR}/scripts/sync_weekly_read_model.py" --week-id 1
+  for week_id in 1 2 3; do
+    quiz_path="${ROOT_DIR}/artifacts/pipeline_state/weekly_${week_id}_quiz.json"
+    if [[ -f "$quiz_path" ]]; then
+      "${ROOT_DIR}/.venv_quizsvc/bin/python" "${ROOT_DIR}/scripts/sync_weekly_read_model.py" --week-id "${week_id}"
+    fi
+  done
 fi
 
 UVICORN_ARGS=(

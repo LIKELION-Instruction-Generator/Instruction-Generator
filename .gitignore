@@ -36,3 +36,7 @@ artifacts/runpod_fetch/
 NLP_Task2/강의 스크립트/
 NLP_Task2/강의 커리큘럼.csv
 NLP_Task2/기존 퀴즈 샘플.pdf
+
+
+# 실험용 파일
+note.py
